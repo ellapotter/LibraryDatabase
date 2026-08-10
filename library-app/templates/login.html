@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Library Database Login</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+  </head>
+  <body>
+    <main class="card">
+      <div class="brand">Library Database</div>
+      <h1>Sign in</h1>
+      <p>Enter your credentials to access your role dashboard.</p>
+
+      {% if error %}
+      <div class="error" role="alert">{{ error }}</div>
+      {% endif %}
+
+      <form method="post" action="{{ url_for('login') }}">
+        <label for="username">Username</label>
+        <input
+          id="username"
+          name="username"
+          type="text"
+          autocomplete="username"
+          required
+        />
+
+        <label for="password">Password</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          required
+        />
+
+        <button type="submit">Log In</button>
+      </form>
+
+      <div class="login-reference" aria-label="Demo login credentials">
+        <h2>Demo Logins</h2>
+        <div class="credential-grid">
+          <div class="credential-group">
+            <h3>👤 Patrons</h3>
+            <div class="credential-list">
+              <span><strong>patron1</strong> / patron1</span>
+              <span><strong>patron2</strong> / patron2</span>
+              <span><strong>patron3</strong> / patron3</span>
+            </div>
+          </div>
+          <div class="credential-group">
+            <h3>📚 Staff</h3>
+            <div class="credential-list">
+              <span><strong>staff1</strong> / staff1</span>
+              <span><strong>staff2</strong> / staff2</span>
+              <span><strong>staff3</strong> / staff3</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <details class="project-details">
+        <summary>Show Project Description</summary>
+        <div class="project-details-body">
+          <h3>How We Met the Deliverable 5 Requirements</h3>
+          <h4 class="centeredHeader">Important Note</h4>
+          <ul>
+            <li>
+              The
+              <strong class="lavender"
+                >buttons with a lavender background color</strong
+              >
+              represent the functionality that we are using to meet the deliverable
+              5 requirements.
+            </li>
+            <li>
+              The
+              <strong class="blue">buttons with a blue background color</strong>
+              represent additional functionality we added beyond what is required
+              for deliverable 5
+            </li>
+          </ul>
+          <h4 class="centeredHeader">When Logging in as a Patron...</h4>
+          <ul>
+            <li>
+              <strong>First Query:</strong> The "View Library Fees" button shows the
+              patron's unpaid fee total using a join and an aggregate function
+            </li>
+            <li>
+              <strong>Second Query:</strong> The "View Your Room Reservations" shows
+              the patron's upcoming reservations using a view called
+              Patron_Reservation_View
+            </li>
+            <li>
+              <strong>A Function:</strong> The "View Library Fees" button calculates
+              the patron's total unpaid fees using a function
+            </li>
+            <li><strong>Operation Showcasing a Trigger:</strong> A trigger is in place to automatically deny any new reservation that
+            takes place in the same room at the same day and time as an existing reservation. To view this, the patron can attempt to create a duplicate reservation using
+          the "Add New Reservation" button and will see that it results in an error.</li>
+          <li>
+              <strong>CRUD Functionality:</strong> The patron role is able to CREATE new reservations,
+              READ multiple tables of data, UPDATE their email address, and DELETE reservations they have created.
+            </li>
+          </ul>
+          <h4 class="centeredHeader">When Logging in as Staff</h4>
+          <ul>
+            <li>
+              <strong>Third Query:</strong> The "View Patrons with Current
+              Checkouts" button uses both a join and a subquery
+            </li>
+            <li>
+              <strong>Fourth Query:</strong> The "Search Library Book Collection"
+              button uses a join
+            </li>
+            <li>
+              <strong>Fifth Query:</strong> The "View Total Checked Out Materials"
+              button uses an aggregate function and a join in the query
+            </li>
+            <li>
+              <strong>A Procedure:</strong> The "Apply Late Fees" button uses a
+              procedure to apply the late fees
+            </li>
+            <li>
+              <strong>CRUD Functionality:</strong> The staff role is able to CREATE new patron accounts,
+              READ multiple tables of data, UPDATE late fee amounts, and DELETE patron accounts.
+            </li>
+          </ul>
+        </div>
+      </details>
+    </main>
+  </body>
+</html>

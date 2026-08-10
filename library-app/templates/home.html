@@ -1,0 +1,2627 @@
+<!-- Home page for the website -->
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Library Database Dashboard</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+  </head>
+  <body>
+    <main class="card">
+      <div class="brand">Library Dashboard</div>
+      {% if username %}
+      <p class="muted">Signed in as {{ username }} ({{ role }})</p>
+      {% endif %}
+
+      <!-- Status message to show if the database is connected or not -->
+      <div class="status {% if db_ok %}success{% else %}error{% endif %}">
+        {{ db_message }}
+      </div>
+
+      <!-- Flash messages to show db errors from trigger-->
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div class="status {{ category }}">{{ message }}</div>
+      {% endfor %} {% endif %} {% endwith %}
+
+      <!-- ----- SPECIFIC DISPLAYS FOR PATRON ROLE IN THIS SECTION ----- -->
+      {% if role == 'patron' %}
+      <script>
+        // This section includes functions that handle the click events of the buttons the patron might select
+
+        // handles the onclick event for displaying patron profile information
+        function handleDisplayProfileInformationClick() {
+          let profileTable = document.getElementById("YourPatronProfile");
+          let profileButton = document.getElementById(
+            "displayProfileInfoButton",
+          );
+          let explanation = document.getElementById(
+            "displayPatronProfileInfoExplanation",
+          );
+          if (profileTable.style.display == "none") {
+            profileTable.style.display = "block";
+            explanation.style.display = "list-item";
+            profileButton.innerText = "Hide Profile";
+          } else {
+            profileTable.style.display = "none";
+            explanation.style.display = "none";
+            profileButton.innerText = "👤 Profile";
+          }
+        }
+
+        // handles the onclick event for updating patron email
+        function handleUpdateEmailClick() {
+          let updateEmailForm = document.getElementById("updateEmailForm");
+          let updateEmailButton = document.getElementById("updateEmailButton");
+          let explanation = document.getElementById(
+            "updateProfileEmailPatronExplanation",
+          );
+          if (updateEmailForm.style.display == "none") {
+            updateEmailForm.style.display = "";
+            explanation.style.display = "list-item";
+            updateEmailButton.innerText = "Hide Email Form";
+          } else {
+            updateEmailForm.style.display = "none";
+            explanation.style.display = "none";
+            updateEmailButton.innerText = "✉️ Update Email";
+          }
+        }
+
+        // handles the onclick event for displaying the patron's checkout history
+        function handleDisplayCheckoutsHistoryClick() {
+          let checkoutsTable = document.getElementById("YourCheckouts");
+          let checkoutsButton = document.getElementById(
+            "displayCheckoutsHistoryButton",
+          );
+          let explanation = document.getElementById(
+            "displayPatronCheckoutHistoryExplanation",
+          );
+          if (checkoutsTable.style.display == "none") {
+            checkoutsTable.style.display = "block";
+            explanation.style.display = "list-item";
+            checkoutsButton.innerText = "Hide History";
+          } else {
+            checkoutsTable.style.display = "none";
+            explanation.style.display = "none";
+            checkoutsButton.innerText = "🕘 Checkout History";
+          }
+        }
+
+        function handleViewCheckoutRequestsClick() {
+          let requestsTable = document.getElementById(
+            "PatronCheckoutRequestsTable",
+          );
+          let requestsButton = document.getElementById(
+            "viewCheckoutRequestsButton",
+          );
+          let explanation = document.getElementById(
+            "viewCheckoutRequestsPatronExplanation",
+          );
+
+          if (requestsTable.style.display == "none") {
+            requestsTable.style.display = "block";
+            explanation.style.display = "list-item";
+            requestsButton.innerText = "Hide Requests";
+          } else {
+            requestsTable.style.display = "none";
+            explanation.style.display = "none";
+            requestsButton.innerText = "📋 Requests";
+          }
+        }
+
+        // handles the onclick event for viewing the patron's library fees
+        function handleViewLibraryFeesClick() {
+          let viewFeesTable = document.getElementById("YourFees");
+          let viewFeesButton = document.getElementById("viewFeesButton");
+          let feesQueryExplanation = document.getElementById(
+            "viewLibraryFeesExplanation",
+          );
+          if (viewFeesTable.style.display == "none") {
+            viewFeesTable.style.display = "block";
+            feesQueryExplanation.style.display = "list-item";
+            viewFeesButton.innerText = "Hide Fees";
+          } else {
+            viewFeesTable.style.display = "none";
+            feesQueryExplanation.style.display = "none";
+            viewFeesButton.innerText = "💵 Fees";
+          }
+        }
+
+        // handles the onclick event for viewing the patron's cafe orders
+        function handleViewCafeOrdersClick() {
+          let viewCafeOrdersTable = document.getElementById("YourCafeOrders");
+          let viewCafeOrdersButton = document.getElementById(
+            "viewCafeOrdersButton",
+          );
+          let explanation = document.getElementById(
+            "viewPatronCafeHistoryExplanation",
+          );
+          if (viewCafeOrdersTable.style.display == "none") {
+            viewCafeOrdersTable.style.display = "block";
+            explanation.style.display = "list-item";
+            viewCafeOrdersButton.innerText = "Hide Cafe Orders";
+          } else {
+            viewCafeOrdersTable.style.display = "none";
+            explanation.style.display = "none";
+            viewCafeOrdersButton.innerText = "☕ Cafe Orders";
+          }
+        }
+
+        // handles the onclick event for viewing the patron's room reservations
+        function handleViewRoomReservationsClick() {
+          let viewRoomReservationsTable =
+            document.getElementById("YourReservations");
+          let viewRoomReservationsButton = document.getElementById(
+            "viewRoomReservationsButton",
+          );
+          let reservationsQueryExplanation = document.getElementById(
+            "viewRoomReservationsExplanation",
+          );
+          if (viewRoomReservationsTable.style.display == "none") {
+            viewRoomReservationsTable.style.display = "block";
+            reservationsQueryExplanation.style.display = "list-item";
+            viewRoomReservationsButton.innerText = "Hide Reservations";
+          } else {
+            viewRoomReservationsTable.style.display = "none";
+            reservationsQueryExplanation.style.display = "none";
+            viewRoomReservationsButton.innerText = "🗓 Reservations";
+          }
+        }
+
+        // handles the onclick event for adding a new room reservation
+        function handleAddReservationClick() {
+          let reservationForm = document.getElementById("addReservationForm");
+          let reservationButton = document.getElementById(
+            "addReservationButton",
+          );
+          let explanation = document.getElementById(
+            "addNewReservationExplanation",
+          );
+          if (reservationForm.style.display == "none") {
+            reservationForm.style.display = "";
+            explanation.style.display = "list-item";
+            reservationButton.innerText = "Hide Room Form";
+          } else {
+            reservationForm.style.display = "none";
+            explanation.style.display = "none";
+            reservationButton.innerText = "➕ Reserve Room";
+          }
+        }
+
+        // handles the onclick event for deleting a room reservation
+        function handleDeleteReservationClick() {
+          let deleteReservationForm = document.getElementById(
+            "deleteReservationForm",
+          );
+          let deleteReservationButton = document.getElementById(
+            "deleteReservationButton",
+          );
+          let explanation = document.getElementById(
+            "deleteReservationPatronExplanation",
+          );
+          if (deleteReservationForm.style.display == "none") {
+            deleteReservationForm.style.display = "";
+            explanation.style.display = "list-item";
+            deleteReservationButton.innerText = "Hide Cancel Form";
+          } else {
+            deleteReservationForm.style.display = "none";
+            deleteReservationButton.innerText = "🗑 Cancel Reservation";
+          }
+        }
+
+        // handles the onclick event for viewing the patron's event registrations
+        function handleViewEventRegistrationsClick() {
+          let viewEventRegistrationsTable = document.getElementById(
+            "YourEventRegistrations",
+          );
+          let viewRoomReservationsButton = document.getElementById(
+            "viewEventRegistrationsButton",
+          );
+          let explanation = document.getElementById(
+            "viewPatronEventRegistrationsExplanation",
+          );
+          if (viewEventRegistrationsTable.style.display == "none") {
+            viewEventRegistrationsTable.style.display = "block";
+            explanation.style.display = "list-item";
+            viewEventRegistrationsButton.innerText = "Hide Events";
+          } else {
+            viewEventRegistrationsTable.style.display = "none";
+            explanation.style.display = "none";
+            viewEventRegistrationsButton.innerText = "🎟 Events";
+          }
+        }
+
+        // handles the onclick event for browsing the library's book collection by title
+        function handleBrowseCollectionClick() {
+          let browseCollectionForm = document.getElementById(
+            "browseCollectionForm",
+          );
+          let browseCollectionButton = document.getElementById(
+            "browseCollectionButton",
+          );
+          let explanation = document.getElementById(
+            "searchLibraryCollectionPatronExplanation",
+          );
+          if (browseCollectionForm.style.display == "none") {
+            browseCollectionForm.style.display = "";
+            explanation.style.display = "list-item";
+            browseCollectionButton.innerText = "Hide Book Search";
+          } else {
+            browseCollectionForm.style.display = "none";
+            explanation.style.display = "none";
+            let displayedResults = document.getElementById(
+              "browseCatalogueResultsTable",
+            );
+            displayedResults.style.display = "none";
+            browseCollectionButton.innerText = "🔎 Find Books";
+          }
+        }
+
+        // handles the onclick event for browsing the library's film collection by title
+        function handleBrowseCollectionFilmClick() {
+          let browseCollectionFilmForm = document.getElementById(
+            "browseCollectionFilmForm",
+          );
+          let browseCollectionFilmButton = document.getElementById(
+            "browseCollectionFilmButton",
+          );
+          let explanation = document.getElementById(
+            "searchLibraryFilmCollectionPatronExplanation",
+          );
+          if (browseCollectionFilmForm.style.display == "none") {
+            browseCollectionFilmForm.style.display = "";
+            explanation.style.display = "list-item";
+            browseCollectionFilmButton.innerText = "Hide Film Search";
+          } else {
+            browseCollectionFilmForm.style.display = "none";
+            explanation.style.display = "none";
+            let displayedResults = document.getElementById(
+              "browseCatalogueFilmResultsTable",
+            );
+            displayedResults.style.display = "none";
+            browseCollectionFilmButton.innerText = "🎬 Find Films";
+          }
+        }
+
+        function handleViewMaterialsClick() {
+          let table = document.getElementById("AllMaterialsTable");
+          let button = document.getElementById("viewMaterialsButton");
+          let explanation = document.getElementById(
+            "viewAllLibraryMaterialsPatronExplanation",
+          );
+
+          if (table.style.display == "none") {
+            table.style.display = "block";
+            explanation.style.display = "list-item";
+            button.innerText = "Hide Materials";
+          } else {
+            table.style.display = "none";
+            explanation.style.display = "none";
+            button.innerText = "📚 All Materials";
+          }
+        }
+
+        function handleRequestCheckoutClick() {
+          let form = document.getElementById("requestCheckoutForm");
+          let button = document.getElementById("requestCheckoutButton");
+          let explanation = document.getElementById(
+            "requestCheckoutPatronExplanation",
+          );
+
+          if (form.style.display == "none") {
+            form.style.display = "";
+            explanation.style.display = "list-item";
+            button.innerText = "Hide Request Form";
+          } else {
+            form.style.display = "none";
+            explanation.style.display = "none";
+            button.innerText = "➕ Request Checkout";
+          }
+        }
+
+        function handleCheckedOutCountClick() {
+          let section = document.getElementById("checkedOutCountSection");
+          let button = document.getElementById("checkedOutCountButton");
+
+          if (section.style.display == "none") {
+            section.style.display = "block";
+            button.innerText = "Hide Count";
+          } else {
+            section.style.display = "none";
+            button.innerText = "# Checked Out";
+          }
+        }
+      </script>
+      <!-- This section includes the buttons the patron can click from the dashboard -->
+      <section class="dashboard-tools">
+        <h2 class="section-title">&#128218; Library Tools</h2>
+        <div
+          class="dashboard-tabs"
+          role="tablist"
+          aria-label="Patron dashboard sections"
+        >
+          <input
+            type="radio"
+            name="patron-tab"
+            id="patron-materials-tab"
+            checked
+          />
+          <label for="patron-materials-tab"
+            >&#128218; Materials & Checkouts</label
+          >
+          <input type="radio" name="patron-tab" id="patron-rooms-tab" />
+          <label for="patron-rooms-tab">&#128719; Rooms & Reservations</label>
+          <input type="radio" name="patron-tab" id="patron-extra-tab" />
+          <label for="patron-extra-tab"
+            >&#8505; Account, Fees & Extra Info</label
+          >
+
+          <div class="tab-panel patron-materials-panel">
+            <div class="tool-card">
+              <h3>Materials</h3>
+              <div class="button-grid">
+                <button
+                  class="functionButton"
+                  id="viewMaterialsButton"
+                  onclick="handleViewMaterialsClick()"
+                >
+                  📚 All Materials
+                </button>
+                <button
+                  class="functionButton"
+                  id="browseCollectionButton"
+                  onclick="handleBrowseCollectionClick()"
+                >
+                  🔎 Find Books
+                </button>
+                <button
+                  class="functionButton"
+                  id="browseCollectionFilmButton"
+                  onclick="handleBrowseCollectionFilmClick()"
+                >
+                  🎬 Find Films
+                </button>
+              </div>
+            </div>
+            <div class="tool-card">
+              <h3>Checkouts</h3>
+              <div class="button-grid">
+                <button
+                  class="functionButton"
+                  id="requestCheckoutButton"
+                  onclick="handleRequestCheckoutClick()"
+                >
+                  ➕ Request Checkout
+                </button>
+                <button
+                  class="functionButton"
+                  id="displayCheckoutsHistoryButton"
+                  onclick="handleDisplayCheckoutsHistoryClick()"
+                >
+                  🕘 Checkout History
+                </button>
+                <button
+                  class="functionButton"
+                  id="viewCheckoutRequestsButton"
+                  onclick="handleViewCheckoutRequestsClick()"
+                >
+                  📋 Requests
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-panel patron-rooms-panel">
+            <div class="tool-card">
+              <h3>Rooms & Reservations</h3>
+              <div class="button-grid">
+                <button
+                  class="functionButton deliverableFiveQuery"
+                  id="addReservationButton"
+                  onclick="handleAddReservationClick()"
+                >
+                  ➕ Reserve Room
+                </button>
+                <button
+                  class="functionButton deliverableFiveQuery"
+                  id="viewRoomReservationsButton"
+                  onclick="handleViewRoomReservationsClick()"
+                >
+                  🗓 Reservations
+                </button>
+                <button
+                  class="functionButton"
+                  id="deleteReservationButton"
+                  onclick="handleDeleteReservationClick()"
+                >
+                  🗑 Cancel Reservation
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-panel patron-extra-panel">
+            <div class="tool-card">
+              <h3>Account</h3>
+              <div class="button-grid">
+                <button
+                  class="functionButton"
+                  id="displayProfileInfoButton"
+                  onclick="handleDisplayProfileInformationClick()"
+                >
+                  👤 Profile
+                </button>
+                <button
+                  class="functionButton"
+                  id="updateEmailButton"
+                  onclick="handleUpdateEmailClick()"
+                >
+                  ✉️ Update Email
+                </button>
+              </div>
+            </div>
+            <div class="tool-card">
+              <h3>Fees & Extra Info</h3>
+              <div class="button-grid">
+                <button
+                  class="functionButton deliverableFiveQuery"
+                  id="viewFeesButton"
+                  onclick="handleViewLibraryFeesClick()"
+                >
+                  💵 Fees
+                </button>
+                <button
+                  class="functionButton"
+                  id="viewCafeOrdersButton"
+                  onclick="handleViewCafeOrdersClick()"
+                >
+                  ☕ Cafe Orders
+                </button>
+                <button
+                  class="functionButton"
+                  id="viewEventRegistrationsButton"
+                  onclick="handleViewEventRegistrationsClick()"
+                >
+                  🎟 Events
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <ul class="query-explanation-list" aria-label="Query explanations">
+        <li
+          class="margin-bottom"
+          id="addNewReservationExplanation"
+          style="display: none"
+        >
+          <strong>Add New Reservation Query:</strong> This query uses an
+          insertion statement to add the user input values to the Reservation
+          table
+        </li>
+        <li
+          class="margin-bottom"
+          id="requestCheckoutPatronExplanation"
+          style="display: none"
+        >
+          <strong>Request Checkout Query:</strong> This query inserts a new row
+          into the CheckoutRequest table with a pending status. The material
+          availability stays available until staff accepts the request.
+        </li>
+        <li
+          class="margin-bottom"
+          id="displayPatronProfileInfoExplanation"
+          style="display: none"
+        >
+          <strong>Display Profile Information Query:</strong> This query uses a
+          select statement to retrieve the information from the Patron table
+          where the patron_id matches the logged-in user's patron_id
+        </li>
+        <li
+          class="margin-bottom"
+          id="displayPatronCheckoutHistoryExplanation"
+          style="display: none"
+        >
+          <strong>Display Checkouts History Query:</strong> This query joins the
+          Checkouts and Material tables on material_id and uses a where clause
+          to find the checkouts for the logged-in patron
+        </li>
+        <li
+          class="margin-bottom"
+          id="viewCheckoutRequestsPatronExplanation"
+          style="display: none"
+        >
+          <strong>View Checkout Requests Query:</strong> This query joins
+          CheckoutRequest and Material to display the logged-in patron's
+          checkout requests and their current request statuses.
+        </li>
+        <li
+          class="margin-bottom"
+          id="viewLibraryFeesExplanation"
+          style="display: none"
+        >
+          <strong>View Library Fees History Query:</strong> This query displays
+          the logged in patron's total unpaid fees amount alongside their fees
+          table. The query uses an aggregate function (COUNT and SUM) to find
+          these totals and joins Patron to Fee to view only the specific
+          patron's data.
+        </li>
+        <li
+          class="margin-bottom"
+          id="viewPatronCafeHistoryExplanation"
+          style="display: none"
+        >
+          <strong>View Cafe Order History Query:</strong> This query uses a
+          select statement to retrieve the information from the CafeOrder table
+          where the patron_id matches the logged-in user's patron_id
+        </li>
+        <li
+          class="margin-bottom"
+          id="viewRoomReservationsExplanation"
+          style="display: none"
+        >
+          <strong>View Your Room Reservations Query:</strong> This query
+          displays the logged in patron's upcoming reservations alonside their
+          reservations table. The query uses the Patron_Reservation_View which
+          returns only reservations for the current patron, it then filters
+          those reservations whose dates fall after today's date.
+        </li>
+        <li
+          class="margin-bottom"
+          id="viewPatronEventRegistrationsExplanation"
+          style="display: none"
+        >
+          <strong>View Your Event Registrations Query: </strong>This query uses
+          a select statement to retrieve the information from the Registration
+          table where the patron_id matches the logged-in user's patron_id
+        </li>
+        <li
+          class="margin-bottom"
+          id="viewAllLibraryMaterialsPatronExplanation"
+          style="display: none"
+        >
+          <strong>View All Library Materials Query:</strong> This query uses a
+          select statement on the patron view for the materials to limit which
+          book and film information the patron sees
+        </li>
+        <li
+          class="margin-bottom"
+          id="searchLibraryCollectionPatronExplanation"
+          style="display: none"
+        >
+          <strong>Search Library Book Collection:</strong> This query displays a
+          variety of relevant book information using a join of the Book table to
+          the BookISBNConnector table on the shared isbn attribute and then
+          joins the Material table on the material_id attribute, limiting the
+          results with a where clause to only books whose title matches what the
+          user types in
+        </li>
+        <li
+          class="margin-bottom"
+          id="searchLibraryFilmCollectionPatronExplanation"
+          style="display: none"
+        >
+          <strong>Search Library Film Collection Query:</strong> This query
+          displays a variety of relevant film information using a join of the
+          Film table to the FilmConnector table on the shared imdb_id attribute
+          and then joins the Material table on the material_id attribute,
+          limiting the results with a where clause to only films whose title
+          matches what the user types in
+        </li>
+        <li
+          class="margin-bottom"
+          id="updateProfileEmailPatronExplanation"
+          style="display: none"
+        >
+          <strong>Update Profile Email Query:</strong> This query updates the
+          email address in the Patron table where the patron_id matches the
+          patron_id of the logged-in patron
+        </li>
+        <li
+          class="margin-bottom"
+          id="deleteReservationPatronExplanation"
+          style="display: none"
+        >
+          <strong>Delete Reservation Query:</strong> This query deletes the
+          entry from the reservation table whose reservation_id matches the id
+          the user inputs
+        </li>
+      </ul>
+      <!-- This section includes the forms that some of the buttons display to retrieve inputs from the user -->
+      <!-- this is the form for updating a user's email address -->
+      <form
+        action="/update_email"
+        method="POST"
+        class="searchForm"
+        id="updateEmailForm"
+        style="display: none"
+      >
+        <label for="new_email">New Email Address:</label>
+        <input
+          type="email"
+          name="new_email"
+          placeholder="New Email"
+          id="newEmailInput"
+          required
+        />
+        <br />
+
+        <button type="submit">Update Email</button>
+      </form>
+
+      <!-- this is the form for adding a new room reservation -->
+      <form
+        action="/create_reservation"
+        method="POST"
+        class="searchForm"
+        id="addReservationForm"
+        style="display: none"
+      >
+        <label for="reservation_room_id">Room ID:</label>
+        <select id="reservation_room_id" name="room_id" required>
+          <option value="">Select a room</option>
+          {% for room in room_options %}
+          <option value="{{ room.room_id }}">
+            {{ room.room_id }} - Room {{ room.room_no }} {{ room.room_name }}
+          </option>
+          {% endfor %}
+        </select>
+
+        <label for="reservation_date">Reservation Date:</label>
+        <input
+          type="date"
+          id="reservation_date"
+          name="reservation_date"
+          required
+        />
+
+        <label for="reservation_type">Reservation Type:</label>
+        <input
+          type="text"
+          id="reservation_type"
+          name="reservation_type"
+          placeholder="Study, Group Study, Media Use"
+          required
+        />
+
+        <label for="reservation_start_time">Start Time:</label>
+        <input
+          type="time"
+          id="reservation_start_time"
+          name="start_time"
+          required
+        />
+
+        <label for="reservation_end_time">End Time:</label>
+        <input type="time" id="reservation_end_time" name="end_time" required />
+
+        <button type="submit">Add Reservation</button>
+      </form>
+
+      <form
+        action="/request_checkout"
+        method="POST"
+        class="searchForm"
+        id="requestCheckoutForm"
+        style="display: none"
+      >
+        {% if requestable_materials %}
+        <label for="request_checkout_material_id">Material:</label>
+        <select id="request_checkout_material_id" name="material_id" required>
+          <option value="">Select a material</option>
+          {% for material in requestable_materials %}
+          <option value="{{ material.material_id }}">
+            {{ material.material_id }} - {{ material.title }} ({{
+            material.material_type|title }}, {{ material.genre }})
+          </option>
+          {% endfor %}
+        </select>
+
+        <button type="submit">Submit Checkout Request</button>
+        {% else %}
+        <p class="muted small">
+          No books or films are currently available to request.
+        </p>
+        {% endif %}
+      </form>
+
+      <!-- this is the form for deleting one of the patron's room reservations -->
+      <form
+        action="/delete_reservation"
+        method="POST"
+        class="searchForm"
+        id="deleteReservationForm"
+        style="display: none"
+      >
+        <label for="deleted_reservation_id">Reservation ID:</label>
+        <input
+          type="number"
+          id="deleted_reservation_id"
+          name="reservation_id"
+          placeholder="Reservation ID"
+          min="1"
+          required
+        />
+
+        <button type="submit">Delete Reservation</button>
+      </form>
+
+      <!-- this is the form for search the library catalogue by book title -->
+      <form
+        action="/searchCatalogueBookTitles"
+        method="GET"
+        class="searchForm"
+        id="browseCollectionForm"
+        style="display: none"
+      >
+        <input
+          type="text"
+          name="book_title"
+          placeholder="Book Title"
+          id="browseCataloguePatronInput"
+        />
+        <button type="submit">Search</button>
+      </form>
+
+      <!-- this is the form for searching the library catalogue by film title -->
+      <form
+        action="/searchCatalogueFilmTitles"
+        method="GET"
+        class="searchForm"
+        id="browseCollectionFilmForm"
+        style="display: none"
+      >
+        <input
+          type="text"
+          name="film_title"
+          placeholder="Film Title"
+          id="browseCataloguePatronFilmInput"
+        />
+        <button type="submit">Search</button>
+      </form>
+
+      <!-- This section includes the results tables from the browsing queries initiated by the forms above -->
+      <!-- This table holds the book results from the patron's browsing -->
+      <div
+        class="table-wrap"
+        id="browseCatalogueResultsTable"
+        style="display: none"
+      >
+        <h3 class="table-title">Your Search Results</h3>
+        <table id="container" class="preview-table">
+          <thead id="browseCollectionBookHeaders">
+            <tr>
+              <th>Title</th>
+              <th>Author</th>
+              <th>Availability</th>
+              <th>Genre</th>
+              <th>Page Count</th>
+              <th>Publisher</th>
+              <th>Date of Publication</th>
+              <th>ISBN</th>
+              <th>Blurb</th>
+            </tr>
+          </thead>
+          <tbody id="browseCollectionBookInfo"></tbody>
+        </table>
+      </div>
+
+      <!-- This table holds the results of the films found by the patron's browsing -->
+      <div
+        class="table-wrap"
+        id="browseCatalogueFilmResultsTable"
+        style="display: none"
+      >
+        <h3 class="table-title">Your Search Results</h3>
+        <table id="containerFilm" class="preview-table">
+          <thead id="browseCollectionFilmHeaders">
+            <tr>
+              <th>Title</th>
+              <th>Author</th>
+              <th>Availability</th>
+              <th>Genre</th>
+              <th>Length</th>
+              <th>Studio</th>
+              <th>Release Date</th>
+              <th>Film Format</th>
+              <th>Rating</th>
+              <th>Blurb</th>
+            </tr>
+          </thead>
+          <tbody id="browseCollectionFilmInfo"></tbody>
+        </table>
+      </div>
+      <script>
+        // This section attaches event listeners to the form submit buttons where necessary
+
+        // this attaches an event listener to the submit button on the browse by book title form and formats the retrieved query results into a table
+        document
+          .getElementById("browseCollectionForm")
+          .addEventListener("submit", function (e) {
+            e.preventDefault();
+            let displayedResults = document.getElementById(
+              "browseCatalogueResultsTable",
+            );
+            let searchedTitle = document.getElementById(
+              "browseCataloguePatronInput",
+            ).value;
+            console.log(searchedTitle);
+            fetch(`/searchCatalogueBookTitles?book_title=${searchedTitle}`)
+              .then((response) => response.json())
+              .then((data) => {
+                console.log("data: " + data);
+                if (data.length == 0) {
+                  console.log("test");
+                  displayedResults.style.display = "block";
+                  displayedResults.innerHTML =
+                    "<div>No books of that title were found</div>";
+                  return;
+                } else {
+                  console.log("books found: ", data);
+                  let bookTitle = data[0].title;
+                  let tableRows = document.getElementById(
+                    "browseCollectionBookInfo",
+                  );
+                  let tableRowInfo = "";
+                  data.forEach((book) => {
+                    tableRowInfo += `<tr><td>${book.title}</td><td>${book.first_name + " " + book.last_name}</td><td>${book.availability}</td><td>${book.genre}</td><td>${book.page_count}</td><td>${book.publisher}</td><td>${book.publish_date}</td><td>${book.isbn}</td><td>${book.blurb}</td></tr>`;
+                  });
+                  tableRows.innerHTML = tableRowInfo;
+                  displayedResults.style.display = "block";
+                }
+              })
+              .catch((error) => {
+                console.log("An error occurred: " + error);
+              });
+          });
+
+        // this attaches an event listener to the submit button on the browse by film title form and formats the retrieved query results into a table
+        document
+          .getElementById("browseCollectionFilmForm")
+          .addEventListener("submit", function (e) {
+            e.preventDefault();
+            let displayedResults = document.getElementById(
+              "browseCatalogueFilmResultsTable",
+            );
+            let searchedTitle = document.getElementById(
+              "browseCataloguePatronFilmInput",
+            ).value;
+            console.log(searchedTitle);
+            fetch(`/searchCatalogueFilmTitles?film_title=${searchedTitle}`)
+              .then((response) => response.json())
+              .then((data) => {
+                console.log("data: " + data);
+                if (data.length == 0) {
+                  console.log("test");
+                  displayedResults.style.display = "block";
+                  displayedResults.innerHTML =
+                    "<div>No films of that title were found</div>";
+                  return;
+                } else {
+                  console.log("films found: ", data);
+                  let filmTitle = data[0].title;
+                  let tableRows = document.getElementById(
+                    "browseCollectionFilmInfo",
+                  );
+                  let tableRowInfo = "";
+                  data.forEach((film) => {
+                    tableRowInfo += `<tr><td>${film.title}</td><td>${film.first_name + " " + film.last_name}</td><td>${film.availability}</td><td>${film.genre}</td><td>${film.film_length + " minutes"}</td><td>${film.studio}</td><td>${film.publish_date}</td><td>${film.film_format}</td><td>${film.rating}</td><td>${film.blurb}</td></tr>`;
+                  });
+                  tableRows.innerHTML = tableRowInfo;
+                  displayedResults.style.display = "block";
+                }
+              })
+              .catch((error) => {
+                console.log("An error occurred: " + error);
+              });
+          });
+      </script>
+      {% endif %}
+
+      <!-- ----- SPECIFIC DISPLAYS FOR STAFF ROLE IN THIS SECTION ----- -->
+      {% if role == 'staff' %}
+      <script>
+        // These functions handle the onclick events of the buttons the staff member can select
+
+        // This function handles the onclick event of the button for displaying the staff member's profile information
+        function handleDisplayStaffProfileInformationClick() {
+          let profileTable = document.getElementById("YourStaffProfile");
+          let profileButton = document.getElementById(
+            "displayStaffProfileInfoButton",
+          );
+          let profileQueryExplanation = document.getElementById(
+            "displayStaffProfileInfoExplanation",
+          );
+          if (profileTable.style.display == "none") {
+            profileTable.style.display = "block";
+            profileQueryExplanation.style.display = "list-item";
+            profileButton.innerText = "Hide Profile";
+          } else {
+            profileTable.style.display = "none";
+            profileQueryExplanation.style.display = "none";
+            profileButton.innerText = "👤 Staff Profile";
+          }
+        }
+
+        // this function handles the onclick event of the button for displaying the list of library patrons
+        function handleDisplayPatronListClick() {
+          let profileTable = document.getElementById("Patron");
+          let profileButton = document.getElementById(
+            "displayPatronListButton",
+          );
+          let profileQueryInfo = document.getElementById(
+            "displayAllLibraryPatronsExplanation",
+          );
+          if (profileTable.style.display == "none") {
+            profileTable.style.display = "block";
+            profileQueryInfo.style.display = "list-item";
+            profileButton.innerText = "Hide Patrons";
+          } else {
+            profileTable.style.display = "none";
+            profileQueryInfo.style.display = "none";
+            profileButton.innerText = "👥 Patrons";
+          }
+        }
+
+        // this function handles the onclick event of the button for viewing all patrons who currently have a material checked out
+        function handleViewPatronsWithCheckoutsClick() {
+          let patronsTable = document.getElementById(
+            "viewPatronCheckoutsTable",
+          );
+          let patronsButton = document.getElementById(
+            "viewPatronCheckoutsButton",
+          );
+          let patronsQueryExplanation = document.getElementById(
+            "viewPatronsWithCurrentCheckoutsExplanation",
+          );
+          if (patronsTable.style.display == "none") {
+            patronsButton.innerText = "Hide Patron Checkouts";
+            fetch("/get_patron_emails")
+              .then((response) => response.json())
+              .then((data) => {
+                let patronCheckoutsInfo = document.getElementById(
+                  "viewPatronCheckoutsInfo",
+                );
+                let tableRowInfo = "";
+                data.forEach((patron) => {
+                  tableRowInfo += `<tr><td>${patron.patron_id}</td><td>${patron.first_name}</td><td>${patron.last_name}</td><td>${patron.email}</td></tr>`;
+                });
+                patronCheckoutsInfo.innerHTML = tableRowInfo;
+                patronsQueryExplanation.style.display = "list-item";
+                patronsTable.style.display = "block";
+              })
+              .catch((error) =>
+                console.log(
+                  "There was an error retrieving the emails of patrons with checkouts: ",
+                  error,
+                ),
+              );
+          } else {
+            patronsQueryExplanation.style.display = "none";
+            patronsTable.style.display = "none";
+            patronsButton.innerText = "📬 Patron Checkouts";
+          }
+        }
+
+        // this function handles the onclick event of the button for creating a new patron account
+        function handleCreatePatronAccountClick() {
+          let createPatronAccountForm = document.getElementById(
+            "createPatronAccountForm",
+          );
+          let createNewPatronButton = document.getElementById(
+            "createNewPatronButton",
+          );
+          let createPatronQueryDescription = document.getElementById(
+            "createNewPatronAccountExplanation",
+          );
+          if (createPatronAccountForm.style.display == "none") {
+            createPatronAccountForm.style.display = "";
+            createPatronQueryDescription.style.display = "list-item";
+            createNewPatronButton.innerText = "Hide Patron Form";
+          } else {
+            createPatronAccountForm.style.display = "none";
+            createPatronQueryDescription.style.display = "none";
+            createNewPatronButton.innerText = "➕ New Patron";
+          }
+        }
+
+        // this function handles the onclick event for a staff to update a patron's email account
+        function handleStaffUpdateEmailClick() {
+          let updateEmailForm = document.getElementById("staffUpdateEmailForm");
+          let updateEmailButton = document.getElementById(
+            "staffUpdatePatronEmailButton",
+          );
+          let explanation = document.getElementById(
+            "staffUpdatePatronEmailExplanation",
+          );
+          if (updateEmailForm.style.display == "none") {
+            updateEmailForm.style.display = "";
+            explanation.style.display = "list-item";
+            updateEmailButton.innerText = "✉️ Hide Email Form";
+          } else {
+            updateEmailForm.style.display = "none";
+            explanation.style.display = "none";
+            updateEmailButton.innerText = "✉️ Update Email";
+          }
+        }
+
+        // this function handles the onclick event for checking out a material for a patron
+        function handleStaffCheckoutBookClick() {
+          let checkoutBookForm = document.getElementById(
+            "staffCheckoutBookForm",
+          );
+          let checkoutBookButton = document.getElementById(
+            "staffCheckoutBookButton",
+          );
+          let explanation = document.getElementById(
+            "staffCheckoutBookExplanation",
+          );
+          if (checkoutBookForm.style.display == "none") {
+            checkoutBookForm.style.display = "";
+            explanation.style.display = "list-item";
+            checkoutBookButton.innerText = "Hide Checkout Form";
+          } else {
+            checkoutBookForm.style.display = "none";
+            explanation.style.display = "none";
+            checkoutBookButton.innerText = "➕ New Checkout";
+          }
+        }
+
+        // this function handles the onclick event for deleting a patron account
+        function handleDeletePatronAccountClick() {
+          let deletePatronAccountForm = document.getElementById(
+            "deletePatronAccountForm",
+          );
+          let deletePatronAccountButton = document.getElementById(
+            "deletePatronAccountButton",
+          );
+          let explanation = document.getElementById(
+            "deletePatronAccountExplanation",
+          );
+          if (deletePatronAccountForm.style.display == "none") {
+            deletePatronAccountForm.style.display = "";
+            explanation.style.display = "list-item";
+            deletePatronAccountButton.innerText = "Hide Remove Form";
+          } else {
+            deletePatronAccountForm.style.display = "none";
+            explanation.style.display = "none";
+            deletePatronAccountButton.innerText = "🗑 Remove Patron";
+          }
+        }
+
+        // handles the click of the button that gives the checkout count
+        function handleCheckedOutCountClick() {
+          let section = document.getElementById("checkedOutCountSection");
+          let button = document.getElementById("checkedOutCountButton");
+          let explanation = document.getElementById(
+            "viewCheckoutCountExplanation",
+          );
+
+          if (section.style.display == "none") {
+            section.style.display = "block";
+            explanation.style.display = "list-item";
+            button.innerText = "Hide Count";
+          } else {
+            section.style.display = "none";
+            explanation.style.display = "none";
+            button.innerText = "# Checked Out";
+          }
+        }
+
+        // handles the click of the button that allows staff to view all library materials
+        function handleStaffViewMaterialsClick() {
+          let table = document.getElementById("AllMaterialsTable");
+          let button = document.getElementById("staffViewMaterialsButton");
+          let explanation = document.getElementById(
+            "viewAllLibraryMaterialsStaffExplanation",
+          );
+
+          if (table.style.display == "none") {
+            table.style.display = "block";
+            explanation.style.display = "list-item";
+            button.innerText = "Hide Materials";
+          } else {
+            table.style.display = "none";
+            explanation.style.display = "none";
+            button.innerText = "📚 All Materials";
+          }
+        }
+
+        // handles the click of the button that lets staff view all checkouts
+        function handleStaffViewAllCheckoutsClick() {
+          let table = document.getElementById("AllCheckoutsTable");
+          let button = document.getElementById("staffViewAllCheckoutsButton");
+          let explanation = document.getElementById(
+            "viewAllCheckoutsStaffExplanation",
+          );
+
+          if (table.style.display == "none") {
+            table.style.display = "block";
+            explanation.style.display = "list-item";
+            button.innerText = "Hide Checkouts";
+          } else {
+            table.style.display = "none";
+            explanation.style.display = "none";
+            button.innerText = "📋 All Checkouts";
+          }
+        }
+
+        // handles the click of the button that lets staff update the checkout status of a material
+        function handleUpdateCheckoutStatusClick() {
+          let form = document.getElementById("updateCheckoutStatusForm");
+          let button = document.getElementById("updateCheckoutStatusButton");
+          let explanation = document.getElementById(
+            "updateCheckoutStatusExplanation",
+          );
+
+          if (form.style.display == "none") {
+            form.style.display = "";
+            explanation.style.display = "list-item";
+            button.innerText = "Hide Status Form";
+          } else {
+            form.style.display = "none";
+            explanation.style.display = "none";
+            button.innerText = "✅ Request Status";
+          }
+        }
+
+        // this function handles the onclick event for returning a checked out material
+        function handleReturnBookClick() {
+          let returnBookForm = document.getElementById("returnBookForm");
+          let returnBookButton = document.getElementById("returnBookButton");
+          let explanation = document.getElementById("returnBookExplanation");
+          if (returnBookForm.style.display == "none") {
+            returnBookForm.style.display = "";
+            explanation.style.display = "list-item";
+            returnBookButton.innerText = "Hide Return Form";
+          } else {
+            returnBookForm.style.display = "none";
+            explanation.style.display = "none";
+            returnBookButton.innerText = "↩ Return Material";
+          }
+        }
+
+        // this function handles the onclick event for updating a pending room reservation
+        function handleUpdateRoomReservationClick() {
+          let updateReservationForm = document.getElementById(
+            "updateRoomReservationForm",
+          );
+          let updateReservationButton = document.getElementById(
+            "updateRoomReservationButton",
+          );
+          let reservationsTable = document.getElementById("Reservation");
+          let explanation = document.getElementById(
+            "updateRoomReservationExplanation",
+          );
+          if (updateReservationForm.style.display == "none") {
+            updateReservationForm.style.display = "";
+            if (reservationsTable) {
+              reservationsTable.style.display = "block";
+            }
+            explanation.style.display = "list-item";
+            updateReservationButton.innerText = "Hide Status Form";
+          } else {
+            updateReservationForm.style.display = "none";
+            if (reservationsTable) {
+              reservationsTable.style.display = "none";
+            }
+            explanation.style.display = "none";
+            updateReservationButton.innerText = "✅ Reservation Status";
+          }
+        }
+
+        // handles the onclick event for adding a book to the library's book collection
+        function handleAddBookClick() {
+          let addForm = document.getElementById("addNewBookForm");
+          let addButton = document.getElementById("addBookToCollectionButton");
+          let addExplanation = document.getElementById(
+            "addBookToCollectionExplanation",
+          );
+          if (addForm.style.display == "none") {
+            addForm.style.display = "";
+            addExplanation.style.display = "list-item";
+            addButton.innerText = "📚 Hide Add Book Form";
+          } else {
+            addForm.style.display = "none";
+            addExplanation.style.display = "none";
+            addButton.innerText = "📚 Add Book to Collection";
+          }
+        }
+
+        // handles the onclick event for adding a new film to the library collection
+        function handleAddFilmClick() {
+          let addForm = document.getElementById("addNewFilmForm");
+          let addButton = document.getElementById("addFilmToCollectionButton");
+          let addExplanation = document.getElementById(
+            "addFilmToCollectionExplanation",
+          );
+          if (addForm.style.display == "none") {
+            addForm.style.display = "";
+            addExplanation.style.display = "list-item";
+            addButton.innerText = "🎬 Hide Add Film Form";
+          } else {
+            addForm.style.display = "none";
+            addExplanation.style.display = "none";
+            addButton.innerText = "🎬 Add Film to Collection";
+          }
+        }
+
+        // handles the onclick event for viewing the Books table
+        function handleViewBooksStaffClick() {
+          let currentTable = document.getElementById("Book");
+          let currentButton = document.getElementById("viewBooksStaffButton");
+          let explanation = document.getElementById(
+            "viewAllBooksStafExplanation",
+          );
+          if (currentTable.style.display == "none") {
+            currentTable.style.display = "";
+            explanation.style.display = "list-item";
+            currentButton.innerText = "📚 Hide Books";
+          } else {
+            currentTable.style.display = "none";
+            explanation.style.display = "none";
+            currentButton.innerText = "📚 View Books";
+          }
+        }
+
+        // handles the onclick for staff to view the Author table
+        function handleViewAuthorsStaffClick() {
+          let explanation = document.getElementById(
+            "viewAllAuthorsStaffExplanation",
+          );
+          let currentTable = document.getElementById("Author");
+          let currentButton = document.getElementById("viewAuthorsStaffButton");
+          if (currentTable.style.display == "none") {
+            currentTable.style.display = "";
+            explanation.style.display = "list-item";
+            currentButton.innerText = "📚 Hide Author";
+          } else {
+            currentTable.style.display = "none";
+            explanation.style.display = "none";
+            currentButton.innerText = "📚 View Author";
+          }
+        }
+
+        // handles the onclick event for staff to view the Film table
+        function handleViewStaffFilmsClick() {
+          let currentTable = document.getElementById("Film");
+          let currentButton = document.getElementById("viewFilmsStaffButton");
+          let explanation = document.getElementById(
+            "viewAllFilmsStaffExplanation",
+          );
+          if (currentTable.style.display == "none") {
+            currentTable.style.display = "";
+            explanation.style.display = "list-item";
+            currentButton.innerText = "🎬 Hide Films";
+          } else {
+            currentTable.style.display = "none";
+            explanation.style.display = "none";
+            currentButton.innerText = "🎬 View Films";
+          }
+        }
+
+        // handles the onclick event for staff to view the Director table
+        function handleViewStaffDirectorsClick() {
+          let currentTable = document.getElementById("Director");
+          let currentButton = document.getElementById(
+            "viewDirectorsStaffButton",
+          );
+          let explanation = document.getElementById(
+            "viewAllDirectorsStaffExplanation",
+          );
+          if (currentTable.style.display == "none") {
+            currentTable.style.display = "";
+            explanation.style.display = "list-item";
+            currentButton.innerText = "🎬 Hide Directors";
+          } else {
+            currentTable.style.display = "none";
+            explanation.style.display = "none";
+            currentButton.innerText = "🎬 View Directors";
+          }
+        }
+
+        // handles the onclick event for browsing the library's book collection by title
+        function handleStaffBrowseCollectionClick() {
+          let browseCollectionForm = document.getElementById(
+            "browseStaffCollectionForm",
+          );
+          let browseCollectionButton = document.getElementById(
+            "staffBrowseCollectionButton",
+          );
+          let browseCollectionExplanation = document.getElementById(
+            "browseStaffBookCollectionExplanation",
+          );
+          if (browseCollectionForm.style.display == "none") {
+            browseCollectionForm.style.display = "";
+            browseCollectionExplanation.style.display = "list-item";
+            browseCollectionButton.innerText = "Hide Book Search";
+          } else {
+            browseCollectionForm.style.display = "none";
+            let displayedResults = document.getElementById(
+              "browseStaffCatalogueResultsTable",
+            );
+            displayedResults.style.display = "none";
+            browseCollectionExplanation.style.display = "none";
+            browseCollectionButton.innerText = "🔎 Find Books";
+          }
+        }
+
+        // handles the onclick event for viewing the late fees of the patrons
+        function handleViewFeesClick() {
+          let currentTable = document.getElementById("Fee");
+          let currentButton = document.getElementById("viewFeesButton");
+          let explanation = document.getElementById("viewFeesExplanation");
+          if (currentTable.style.display == "none") {
+            currentTable.style.display = "";
+            explanation.style.display = "list-item";
+            currentButton.innerText = "💵 Hide Late Fees";
+          } else {
+            currentTable.style.display = "none";
+            explanation.style.display = "none";
+            currentButton.innerText = "💵 View Late Fees";
+          }
+        }
+
+        // handles the onclick event for browsing the library's film collection by title
+        function handleStaffBrowseCollectionFilmClick() {
+          let browseCollectionFilmForm = document.getElementById(
+            "browseStaffCollectionFilmForm",
+          );
+          let browseCollectionFilmButton = document.getElementById(
+            "staffBrowseCollectionFilmButton",
+          );
+          let browseFilmCollectionExplanation = document.getElementById(
+            "browseStaffFilmCollectionExplanation",
+          );
+          if (browseCollectionFilmForm.style.display == "none") {
+            browseCollectionFilmForm.style.display = "";
+            browseFilmCollectionExplanation.style.display = "list-item";
+            browseCollectionFilmButton.innerText = "Hide Film Search";
+          } else {
+            browseCollectionFilmForm.style.display = "none";
+            browseFilmCollectionExplanation.style.display = "none";
+            let displayedResults = document.getElementById(
+              "browseStaffCatalogueFilmResultsTable",
+            );
+            displayedResults.style.display = "none";
+            browseCollectionFilmButton.innerText = "🔎 Find Films";
+          }
+        }
+      </script>
+
+      <!-- This section includes the buttons the staff member can click from the dashboard -->
+      <section class="dashboard-tools">
+        <h2 class="section-title">&#128218; Staff Library Tools</h2>
+        <div
+          class="dashboard-tabs"
+          role="tablist"
+          aria-label="Staff dashboard sections"
+        >
+          <input
+            type="radio"
+            name="staff-tab"
+            id="staff-materials-tab"
+            checked
+          />
+          <label for="staff-materials-tab"
+            >&#128218; Materials & Checkouts</label
+          >
+          <input type="radio" name="staff-tab" id="staff-rooms-tab" />
+          <label for="staff-rooms-tab">&#128719; Rooms & Reservations</label>
+          <input type="radio" name="staff-tab" id="staff-extra-tab" />
+          <label for="staff-extra-tab"
+            >&#8505; Patrons, Fees & Extra Info</label
+          >
+
+          <div class="tab-panel staff-materials-panel">
+            <div class="tool-card">
+              <h3>Materials</h3>
+              <div class="button-grid">
+                <button
+                  class="functionButton"
+                  id="staffViewMaterialsButton"
+                  onclick="handleStaffViewMaterialsClick()"
+                >
+                  📚 All Materials
+                </button>
+                <button
+                  class="functionButton"
+                  id="addBookToCollectionButton"
+                  onclick="handleAddBookClick()"
+                >
+                  📚 Add Book to Collection
+                </button>
+                <button
+                  class="functionButton"
+                  id="addFilmToCollectionButton"
+                  onclick="handleAddFilmClick()"
+                >
+                  🎬 Add Films to Collection
+                </button>
+                <button
+                  class="functionButton"
+                  id="viewBooksStaffButton"
+                  onclick="handleViewBooksStaffClick()"
+                >
+                  📚 View Books
+                </button>
+                <button
+                  class="functionButton"
+                  id="viewAuthorsStaffButton"
+                  onclick="handleViewAuthorsStaffClick()"
+                >
+                  📚 View Authors
+                </button>
+                <button
+                  class="functionButton"
+                  id="viewFilmsStaffButton"
+                  onclick="handleViewStaffFilmsClick()"
+                >
+                  🎬 View Films
+                </button>
+                <button
+                  class="functionButton"
+                  id="viewDirectorsStaffButton"
+                  onclick="handleViewStaffDirectorsClick()"
+                >
+                  🎬 View Directors
+                </button>
+
+                <button
+                  class="functionButton deliverableFiveQuery"
+                  id="staffBrowseCollectionButton"
+                  onclick="handleStaffBrowseCollectionClick()"
+                >
+                  🔎 Find Books
+                </button>
+                <button
+                  class="functionButton"
+                  id="staffBrowseCollectionFilmButton"
+                  onclick="handleStaffBrowseCollectionFilmClick()"
+                >
+                  🔎 Find Films
+                </button>
+              </div>
+            </div>
+            <div class="tool-card">
+              <h3>Checkouts</h3>
+              <div class="button-grid">
+                <button
+                  class="functionButton"
+                  id="staffCheckoutBookButton"
+                  onclick="handleStaffCheckoutBookClick()"
+                >
+                  ➕ New Checkout
+                </button>
+                <button
+                  class="functionButton"
+                  id="staffViewAllCheckoutsButton"
+                  onclick="handleStaffViewAllCheckoutsClick()"
+                >
+                  📋 All Checkouts
+                </button>
+                <button
+                  class="functionButton deliverableFiveQuery"
+                  id="checkedOutCountButton"
+                  onclick="handleCheckedOutCountClick()"
+                >
+                  # Checked Out
+                </button>
+                <button
+                  class="functionButton"
+                  id="updateCheckoutStatusButton"
+                  onclick="handleUpdateCheckoutStatusClick()"
+                >
+                  ✅ Request Status
+                </button>
+                <button
+                  class="functionButton"
+                  id="returnBookButton"
+                  onclick="handleReturnBookClick()"
+                >
+                  ↩ Return Material
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-panel staff-rooms-panel">
+            <div class="tool-card">
+              <h3>Rooms & Reservations</h3>
+              <div class="button-grid">
+                <button
+                  class="functionButton"
+                  id="updateRoomReservationButton"
+                  onclick="handleUpdateRoomReservationClick()"
+                >
+                  ✅ Reservation Status
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-panel staff-extra-panel">
+            <div class="tool-card">
+              <h3>Patrons & Staff Profile</h3>
+              <div class="button-grid">
+                <button
+                  class="functionButton"
+                  id="displayStaffProfileInfoButton"
+                  onclick="handleDisplayStaffProfileInformationClick()"
+                >
+                  👤 Staff Profile
+                </button>
+                <button
+                  class="functionButton"
+                  id="displayPatronListButton"
+                  onclick="handleDisplayPatronListClick()"
+                >
+                  👥 Patrons
+                </button>
+                <button
+                  class="functionButton deliverableFiveQuery"
+                  id="viewPatronCheckoutsButton"
+                  onclick="handleViewPatronsWithCheckoutsClick()"
+                >
+                  📬 Patron Checkouts
+                </button>
+                <button
+                  class="functionButton"
+                  id="createNewPatronButton"
+                  onclick="handleCreatePatronAccountClick()"
+                >
+                  ➕ New Patron
+                </button>
+                <button
+                  class="functionButton"
+                  id="staffUpdatePatronEmailButton"
+                  onclick="handleStaffUpdateEmailClick()"
+                >
+                  ✉️ Update Patron Email
+                </button>
+                <button
+                  class="functionButton"
+                  id="deletePatronAccountButton"
+                  onclick="handleDeletePatronAccountClick()"
+                >
+                  🗑 Remove Patron
+                </button>
+              </div>
+            </div>
+            <div class="tool-card">
+              <h3>Fees</h3>
+              <div class="button-grid">
+                <button
+                  class="functionButton"
+                  id="viewFeesButton"
+                  onclick="handleViewFeesClick()"
+                >
+                  💵 View Late Fees
+                </button>
+                <form method="post" action="{{ url_for('apply_late_fees') }}">
+                  <button
+                    class="functionButton deliverableFiveQuery"
+                    type="submit"
+                  >
+                    💵 Apply Late Fees
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <ul class="query-explanation-list" aria-label="Query explanations">
+        <li
+          class="margin-bottom"
+          id="staffCheckoutBookExplanation"
+          style="display: none"
+        >
+          <strong>Checkout Material for Patron Query:</strong> This query
+          inserts the selected available book or film and patron ID into the
+          Checkouts table with today's date as the checkout date and the
+          selected due date. The checkout trigger updates the material
+          availability to checked out.
+        </li>
+        <li
+          class="margin-bottom"
+          id="createNewPatronAccountExplanation"
+          style="display: none"
+        >
+          <strong> Create New Patron Account Query:</strong> This query uses an
+          insert into statement on the Patron table to add a new account with
+          the input values
+        </li>
+        <li
+          class="margin-bottom"
+          id="staffUpdatePatronEmailExplanation"
+          style="display: none"
+        >
+          <strong>Update Patron Email Query:</strong> This query updates the
+          email address in the Patron table where the patron_id matches the
+          input patron_id
+        </li>
+        <li
+          class="margin-bottom"
+          id="displayStaffProfileInfoExplanation"
+          style="display: none"
+        >
+          <strong>Display Profile Information Query:</strong> This query uses a
+          joins the Staff table with the Role table on the matching roleID
+          attribute and then uses a where clause to filter to just the logged in
+          staff member's information
+        </li>
+        <li
+          class="margin-bottom"
+          id="displayAllLibraryPatronsExplanation"
+          style="display: none"
+        >
+          <strong>Display List of All Library Patrons Query:</strong> This query
+          uses the asterisk wildcard character to display all of the patron
+          information in the Patron table
+        </li>
+        <li
+          class="margin-bottom"
+          id="viewPatronsWithCurrentCheckoutsExplanation"
+          style="display: none"
+        >
+          <strong>View Patrons with Current Checkouts Query:</strong> This query
+          joins the Patron table to the Checkouts table on the shared patron_id
+          attribute, then uses a where clause to identify checkouts with a
+          return date that is null (meaning the book has not been returned yet)
+          and where the material_id matches the material_id in a subquery on the
+          material table that finds any material whose availability attribute
+          has the value 'checked out'.
+        </li>
+        <li
+          class="margin-bottom"
+          id="viewAllLibraryMaterialsStaffExplanation"
+          style="display: none"
+        >
+          <strong>View All Library Materials Query:</strong> This query uses a
+          select statement on the patron view for the materials to display the
+          book and film information in the library collection
+        </li>
+        <li
+          class="margin-bottom"
+          id="viewAllBooksStafExplanation"
+          style="display: none"
+        >
+          <strong>All Books Query:</strong> This query uses a select statement
+          to retrieve the books in the Book table
+        </li>
+        <li
+          class="margin-bottom"
+          id="viewAllAuthorsStaffExplanation"
+          style="display: none"
+        >
+          <strong>All Authors Query:</strong> This query uses a select statement
+          to retrieve the authors in the Author table
+        </li>
+        <li
+          class="margin-bottom"
+          id="viewAllFilmsStaffExplanation"
+          style="display: none"
+        >
+          <strong>All Films Query:</strong> This query uses a select statement
+          to retrieve the films in the Film table
+        </li>
+        <li
+          class="margin-bottom"
+          id="viewAllDirectorsStaffExplanation"
+          style="display: none"
+        >
+          <strong>All Directors Query:</strong> This query uses a select
+          statement to retrieve the directors in the Director table
+        </li>
+        <li
+          class="margin-bottom"
+          id="viewAllCheckoutsStaffExplanation"
+          style="display: none"
+        >
+          <strong>View All Checkouts Query:</strong> This query uses a select
+          statement on the Checkouts table to display every checkout record,
+          including materials that have already been returned.
+        </li>
+        <li
+          class="margin-bottom"
+          id="addBookToCollectionExplanation"
+          style="display: none"
+        >
+          <strong>Add Book to Collection Query:</strong>This query collects a
+          variety of book information from the user. It checks if the author is
+          already present in the Author table and if the book is already present
+          in the Book table and adds them if not. It also adds the new material
+          to the Material table.
+        </li>
+        <li
+          class="margin-bottom"
+          id="addFilmToCollectionExplanation"
+          style="display: none"
+        >
+          <strong>Add Film to Collection Query:</strong>This query collects a
+          variety of film information from the user. It checks if the director
+          is already present in the Director table and if the film is already
+          present in the Film table and adds them if not. It also adds the new
+          material to the Material table.
+        </li>
+        <li
+          class="margin-bottom"
+          id="browseStaffBookCollectionExplanation"
+          style="display: none"
+        >
+          <strong>Search Library Book Collection Query:</strong> This query
+          displays a variety of relevant book information using a join of the
+          Book table to the BookISBNConnector table on the shared isbn attribute
+          and then joins the Material table on the material_id attribute,
+          limiting the results with a where clause to only books whose title
+          matches what the user types in
+        </li>
+        <li
+          class="margin-bottom"
+          id="browseStaffFilmCollectionExplanation"
+          style="display: none"
+        >
+          <strong>Search Library Film Collection Query:</strong> This query
+          displays a variety of relevant film information using a join of the
+          Film table to the FilmConnector table on the shared imdb_id attribute
+          and then joins the Material table on the material_id attribute,
+          limiting the results with a where clause to only films whose title
+          matches what the user types in
+        </li>
+        <li
+          class="margin-bottom"
+          id="viewCheckoutCountExplanation"
+          style="display: none"
+        >
+          <strong>View Total Checked Out Materials Query:</strong> This query
+          uses count as an aggregate function after joining the Material and
+          Checkout tables on material_id and filtering the results with a where
+          clause to only materials whose return date is null (meaning they are
+          still checked out)
+        </li>
+        <li
+          class="margin-bottom"
+          id="updateRoomReservationExplanation"
+          style="display: none"
+        >
+          <strong>Update Room Reservation Query:</strong> This query updates the
+          Reservation table to change a pending reservation's status to
+          confirmed or denied based on the reservation_id the staff member
+          inputs
+        </li>
+        <li
+          class="margin-bottom"
+          id="updateCheckoutStatusExplanation"
+          style="display: none"
+        >
+          <strong>Update Checkout Status Query:</strong> This query updates a
+          pending checkout request to accepted or denied. Accepted requests
+          create a row in Checkouts with the chosen due date and trigger the
+          material availability update to checked out.
+        </li>
+        <li
+          class="margin-bottom"
+          id="returnBookExplanation"
+          style="display: none"
+        >
+          <strong>Return Material Query:</strong> This query updates the
+          Checkouts table by setting the return_date to today's date for the
+          matching patron ID and material ID. The return trigger updates the
+          material availability to available.
+        </li>
+        <li
+          class="margin-bottom"
+          id="applyLateFeesExplanation"
+          style="display: none"
+        >
+          <strong>Apply Late Fees:</strong> This query uses the apply_late_fees
+          procedure to add a late fee to patrons with a material that has not
+          been returned and whose due date has passed
+        </li>
+        <li
+          class="margin-bottom"
+          id="deletePatronAccountExplanation"
+          style="display: none"
+        >
+          <strong>Delete Patron Account Query:</strong> This query uses a delete
+          statement to remove the patron from the Patron table based on the
+          patron_id the user inputs
+        </li>
+        <li
+          class="margin-bottom"
+          id="viewFeesExplanation"
+          style="display: none"
+        >
+          <strong>View Late Fees:</strong> This query uses a select statement to
+          retrieve the fees in the Fee table
+        </li>
+      </ul>
+      <div>
+        <!-- This is the form for checking out an available material for a patron -->
+        <form
+          action="/checkout_material"
+          method="POST"
+          class="searchForm"
+          id="staffCheckoutBookForm"
+          style="display: none"
+        >
+          {% if available_materials %}
+          <label for="checkout_patron_id">Patron ID:</label>
+          <input
+            type="number"
+            id="checkout_patron_id"
+            name="patron_id"
+            placeholder="Patron ID"
+            min="1"
+            required
+          />
+
+          <label for="checkout_material_id">Material:</label>
+          <select id="checkout_material_id" name="material_id" required>
+            <option value="">Select a material</option>
+            {% for material in available_materials %}
+            <option value="{{ material.material_id }}">
+              {{ material.material_id }} - {{ material.title }} ({{
+              material.material_type|title }}, {{ material.genre }})
+            </option>
+            {% endfor %}
+          </select>
+
+          <label for="checkout_due_date">Due Date:</label>
+          <input
+            type="date"
+            id="checkout_due_date"
+            name="due_date"
+            value="{{ default_due_date }}"
+            min="{{ min_due_date }}"
+            required
+          />
+
+          <button type="submit">Checkout Material</button>
+          {% else %}
+          <p class="muted small">
+            No books or films are currently available to check out.
+          </p>
+          {% endif %}
+        </form>
+
+        <!-- This is the form for creating a new patron account -->
+        <form
+          action="/create_new_patron_account"
+          method="POST"
+          class="searchForm"
+          id="createPatronAccountForm"
+          style="display: none"
+        >
+          <label for="new_patron_first_name">First Name:</label>
+          <input
+            type="text"
+            id="new_patron_first_name"
+            name="first_name"
+            placeholder="First Name"
+            required
+          />
+          <label for="new_patron_last_name">Last Name:</label>
+          <input
+            type="text"
+            id="new_patron_last_name"
+            name="last_name"
+            placeholder="Last Name"
+            required
+          />
+          <label for="new_patron_email">Email:</label>
+          <input
+            type="text"
+            id="new_patron_email"
+            name="email"
+            placeholder="Email"
+            required
+          />
+          <label for="new_patron_member_date">Join Date:</label>
+          <input
+            type="text"
+            id="new_patron_member_date"
+            name="member_date"
+            placeholder="Year-Month-Day"
+            required
+          />
+          <br />
+          <button type="submit">Add Patron Account</button>
+        </form>
+
+        <!-- This is the form for updating a staff to update a patron's email -->
+        <form
+          action="/staff_update_patron_email"
+          method="POST"
+          class="searchForm"
+          id="staffUpdateEmailForm"
+          style="display: none"
+        >
+          <label for="patron_id">Patron ID:</label>
+          <input
+            type="text"
+            name="patron_id"
+            placeholder="Patron ID"
+            id="staffNewPatronEmailID"
+            required
+          />
+          <label for="new_email">New Patron Email Address:</label>
+          <input
+            type="email"
+            name="new_email"
+            placeholder="New Email"
+            id="staffNewPatronEmailInput"
+            required
+          />
+
+          <br />
+
+          <button type="submit">Update Email</button>
+        </form>
+
+        <!-- This is the form for deleting a patron account -->
+        <form
+          action="/delete_patron_account"
+          method="POST"
+          class="searchForm"
+          id="deletePatronAccountForm"
+          style="display: none"
+        >
+          <label for="deleted_patron_id">Patron ID:</label>
+          <input
+            type="text"
+            id="deleted_patron_id"
+            name="patron_id"
+            placeholder="Patron ID"
+            required
+          />
+          <button type="submit">Delete Account</button>
+        </form>
+
+        <!-- This is the form for adding a new book to the library collection-->
+        <form
+          action="/add_new_book"
+          method="POST"
+          class="searchForm"
+          id="addNewBookForm"
+          style="display: none"
+        >
+          <input
+            type="text"
+            name="first_name"
+            placeholder="Author First Name"
+            required
+          />
+          <input
+            type="text"
+            name="last_name"
+            placeholder="Author Last Name"
+            required
+          />
+          <input type="text" name="isbn" placeholder="ISBN" required />
+          <input
+            type="number"
+            name="page_count"
+            placeholder="Page Count"
+            required
+          />
+          <input
+            type="text"
+            name="publisher"
+            placeholder="Publisher"
+            required
+          />
+          <input type="text" name="title" placeholder="Title" required />
+          <input type="text" name="genre" placeholder="Genre" required />
+          <input type="text" name="blurb" placeholder="Blurb" required />
+          <input type="date" name="publish_date" required />
+          <br />
+          <button type="submit">Add Book</button>
+        </form>
+
+        <!-- This is the form for adding a new film to the library collection -->
+        <form
+          action="/add_new_film"
+          method="POST"
+          class="searchForm"
+          id="addNewFilmForm"
+          style="display: none"
+        >
+          <input
+            type="text"
+            name="first_name"
+            placeholder="Director First Name"
+            required
+          />
+          <input
+            type="text"
+            name="last_name"
+            placeholder="Director Last Name"
+            required
+          />
+          <input type="text" name="imdb_id" placeholder="IMDB ID" required />
+          <input
+            type="number"
+            name="film_length"
+            placeholder="Film Length in Minutes"
+            required
+          />
+          <input type="text" name="studio" placeholder="Studio" required />
+          <input type="text" name="rating" placeholder="Rating" required />
+          <input type="text" name="film_format" placeholder="Format" required />
+          <input type="text" name="title" placeholder="Title" required />
+          <input type="text" name="genre" placeholder="Genre" required />
+          <input type="text" name="blurb" placeholder="Blurb" required />
+          <input type="date" name="publish_date" required />
+          <br />
+          <button type="submit">Add Film</button>
+        </form>
+
+        <!-- This is the form for updating a pending room reservation -->
+        <form
+          action="/update_room_reservation"
+          method="POST"
+          class="searchForm"
+          id="updateRoomReservationForm"
+          style="display: none"
+        >
+          <label for="updated_reservation_id">Reservation ID:</label>
+          <input
+            type="text"
+            id="updated_reservation_id"
+            name="reservation_id"
+            placeholder="Reservation ID"
+            required
+          />
+          <label for="updated_reservation_status">Reservation Status:</label>
+          <select
+            id="updated_reservation_status"
+            name="reservation_status"
+            required
+          >
+            <option value="">Select a status</option>
+            <option value="Confirmed">Confirmed</option>
+            <option value="Denied">Denied</option>
+          </select>
+          <button type="submit">Update Reservation</button>
+        </form>
+
+        <form
+          action="/update_checkout_status"
+          method="POST"
+          class="searchForm"
+          id="updateCheckoutStatusForm"
+          style="display: none"
+        >
+          {% if pending_checkout_requests %}
+          <label for="request_id">Pending Checkout Request:</label>
+          <select id="request_id" name="request_id" required>
+            <option value="">Select a pending checkout</option>
+            {% for request in pending_checkout_requests %}
+            <option value="{{ request.request_id }}">
+              Patron {{ request.patron_id }} - {{ request.material_id }} {{
+              request.title }} ({{ request.material_type|title }}, requested {{
+              request.request_date }})
+            </option>
+            {% endfor %}
+          </select>
+
+          <label for="checkout_status">Status:</label>
+          <select id="checkout_status" name="status" required>
+            <option value="">Select a status</option>
+            <option value="accepted">Accepted</option>
+            <option value="denied">Denied</option>
+          </select>
+
+          <label for="accepted_checkout_due_date">Due Date if Accepted:</label>
+          <input
+            type="date"
+            id="accepted_checkout_due_date"
+            name="due_date"
+            value="{{ default_due_date }}"
+            min="{{ min_due_date }}"
+          />
+
+          <div class="table-wrap">
+            <h3 class="table-title">Pending Checkout Requests</h3>
+            <table class="preview-table">
+              <thead>
+                <tr>
+                  <th>patron_id</th>
+                  <th>material_id</th>
+                  <th>material_type</th>
+                  <th>title</th>
+                  <th>request_date</th>
+                  <th>request_status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for request in pending_checkout_requests %}
+                <tr>
+                  <td>{{ request.patron_id }}</td>
+                  <td>{{ request.material_id }}</td>
+                  <td>{{ request.material_type }}</td>
+                  <td>{{ request.title }}</td>
+                  <td>{{ request.request_date }}</td>
+                  <td>{{ request.request_status }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <button type="submit">Update Checkout Status</button>
+          {% else %}
+          <p class="muted small">No pending checkout requests.</p>
+          {% endif %}
+        </form>
+
+        <!-- This is the form for returning a checked out material -->
+        <form
+          action="/return_material"
+          method="POST"
+          class="searchForm"
+          id="returnBookForm"
+          style="display: none"
+        >
+          <label for="return_patron_id">Patron ID:</label>
+          <input
+            type="number"
+            id="return_patron_id"
+            name="patron_id"
+            placeholder="Patron ID"
+            min="1"
+            required
+          />
+
+          <label for="return_material_id">Material ID:</label>
+          <input
+            type="number"
+            id="return_material_id"
+            name="material_id"
+            placeholder="Material ID"
+            min="1"
+            required
+          />
+
+          {% if active_checkouts %}
+          <div class="table-wrap">
+            <h3 class="table-title">Active Checkouts</h3>
+            <table class="preview-table">
+              <thead>
+                <tr>
+                  <th>patron_id</th>
+                  <th>material_id</th>
+                  <th>material_type</th>
+                  <th>title</th>
+                  <th>checkout_date</th>
+                  <th>due_date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for checkout in active_checkouts %}
+                <tr>
+                  <td>{{ checkout.patron_id }}</td>
+                  <td>{{ checkout.material_id }}</td>
+                  <td>{{ checkout.material_type }}</td>
+                  <td>{{ checkout.title }}</td>
+                  <td>{{ checkout.checkout_date }}</td>
+                  <td>{{ checkout.due_date }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <p class="muted small">
+            No books or films are currently checked out.
+          </p>
+          {% endif %}
+
+          <button type="submit">Return Material</button>
+        </form>
+
+        <!-- this is the form for search the library catalogue by book title -->
+        <form
+          action="/searchCatalogueBookTitles"
+          method="GET"
+          class="searchForm"
+          id="browseStaffCollectionForm"
+          style="display: none"
+        >
+          <input
+            type="text"
+            name="book_title"
+            placeholder="Book Title"
+            id="browseStaffCataloguePatronInput"
+          />
+          <button type="submit">Search</button>
+        </form>
+
+        <!-- this is the form for searching the library catalogue by film title -->
+        <form
+          action="/searchCatalogueFilmTitles"
+          method="GET"
+          class="searchForm"
+          id="browseStaffCollectionFilmForm"
+          style="display: none"
+        >
+          <input
+            type="text"
+            name="film_title"
+            placeholder="Film Title"
+            id="browseStaffCataloguePatronFilmInput"
+          />
+          <button type="submit">Search</button>
+        </form>
+
+        <script>
+          // This section attaches event listeners to the form submit buttons where necessary
+
+          // this attaches an event listener to the submit button on the browse by book title form and formats the retrieved query results into a table
+          document
+            .getElementById("browseStaffCollectionForm")
+            .addEventListener("submit", function (e) {
+              e.preventDefault();
+              let displayedResults = document.getElementById(
+                "browseStaffCatalogueResultsTable",
+              );
+              let searchedTitle = document.getElementById(
+                "browseStaffCataloguePatronInput",
+              ).value;
+              console.log(searchedTitle);
+              fetch(`/searchCatalogueBookTitles?book_title=${searchedTitle}`)
+                .then((response) => response.json())
+                .then((data) => {
+                  console.log("data: " + data);
+                  if (data.length == 0) {
+                    console.log("test");
+                    displayedResults.style.display = "block";
+                    displayedResults.innerHTML =
+                      "<div>No books of that title were found</div>";
+                    return;
+                  } else {
+                    console.log("books found: ", data);
+                    let bookTitle = data[0].title;
+                    let tableRows = document.getElementById(
+                      "browseStaffCollectionBookInfo",
+                    );
+                    let tableRowInfo = "";
+                    data.forEach((book) => {
+                      tableRowInfo += `<tr><td>${book.title}</td><td>${book.first_name + " " + book.last_name}</td><td>${book.availability}</td><td>${book.genre}</td><td>${book.page_count}</td><td>${book.publisher}</td><td>${book.publish_date}</td><td>${book.isbn}</td><td>${book.blurb}</td></tr>`;
+                    });
+                    tableRows.innerHTML = tableRowInfo;
+                    displayedResults.style.display = "block";
+                  }
+                })
+                .catch((error) => {
+                  console.log("An error occurred: " + error);
+                });
+            });
+
+          // this attaches an event listener to the submit button on the browse by film title form and formats the retrieved query results into a table
+          document
+            .getElementById("browseStaffCollectionFilmForm")
+            .addEventListener("submit", function (e) {
+              e.preventDefault();
+              let displayedResults = document.getElementById(
+                "browseStaffCatalogueFilmResultsTable",
+              );
+              let searchedTitle = document.getElementById(
+                "browseStaffCataloguePatronFilmInput",
+              ).value;
+              console.log(searchedTitle);
+              fetch(`/searchCatalogueFilmTitles?film_title=${searchedTitle}`)
+                .then((response) => response.json())
+                .then((data) => {
+                  console.log("data: " + data);
+                  if (data.length == 0) {
+                    console.log("test");
+                    displayedResults.style.display = "block";
+                    displayedResults.innerHTML =
+                      "<div>No films of that title were found</div>";
+                    return;
+                  } else {
+                    console.log("films found: ", data);
+                    let filmTitle = data[0].title;
+                    let tableRows = document.getElementById(
+                      "browseStaffCollectionFilmInfo",
+                    );
+                    let tableRowInfo = "";
+                    data.forEach((film) => {
+                      tableRowInfo += `<tr><td>${film.title}</td><td>${film.first_name + " " + film.last_name}</td><td>${film.availability}</td><td>${film.genre}</td><td>${film.film_length + " minutes"}</td><td>${film.studio}</td><td>${film.publish_date}</td><td>${film.film_format}</td><td>${film.rating}</td><td>${film.blurb}</td></tr>`;
+                    });
+                    tableRows.innerHTML = tableRowInfo;
+                    displayedResults.style.display = "block";
+                  }
+                })
+                .catch((error) => {
+                  console.log("An error occurred: " + error);
+                });
+            });
+        </script>
+
+        <!-- This section includes the tables to display the results from the events and forms above where needed -->
+        <div
+          class="table-wrap"
+          id="viewPatronCheckoutsTable"
+          style="display: none"
+        >
+          <h3 class="table-title">Your Search Results</h3>
+          <table class="preview-table">
+            <thead id="viewPatronCheckoutsHeaders">
+              <tr>
+                <th>Patron ID</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Email</th>
+              </tr>
+            </thead>
+            <tbody id="viewPatronCheckoutsInfo"></tbody>
+          </table>
+        </div>
+
+        <div
+          class="table-wrap"
+          id="browseStaffCatalogueResultsTable"
+          style="display: none"
+        >
+          <h3 class="table-title">Your Search Results</h3>
+          <table id="container" class="preview-table">
+            <thead id="browseStaffCollectionBookHeaders">
+              <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Availability</th>
+                <th>Genre</th>
+                <th>Page Count</th>
+                <th>Publisher</th>
+                <th>Date of Publication</th>
+                <th>ISBN</th>
+                <th>Blurb</th>
+              </tr>
+            </thead>
+            <tbody id="browseStaffCollectionBookInfo"></tbody>
+          </table>
+        </div>
+
+        <!-- This table holds the results of the films found by the patron's browsing -->
+        <div
+          class="table-wrap"
+          id="browseStaffCatalogueFilmResultsTable"
+          style="display: none"
+        >
+          <h3 class="table-title">Your Search Results</h3>
+          <table id="containerFilm" class="preview-table">
+            <thead id="browseStaffCollectionFilmHeaders">
+              <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Availability</th>
+                <th>Genre</th>
+                <th>Length</th>
+                <th>Studio</th>
+                <th>Release Date</th>
+                <th>Film Format</th>
+                <th>Rating</th>
+                <th>Blurb</th>
+              </tr>
+            </thead>
+            <tbody id="browseStaffCollectionFilmInfo"></tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Error message to show if the preview data is not found -->
+      {% if preview_error %}
+      <div class="status error">{{ preview_error }}</div>
+      {% elif preview_data %} {% for preview in preview_data %}
+      <div
+        class="outerTableWrap"
+        id="{{preview.table_name.replace(' ', '')}}"
+        style="display: none"
+      >
+        <h3 class="table-title">{{ preview.table_name }}</h3>
+        {% if preview.rows %}
+        <div class="table-wrap">
+          <table class="preview-table">
+            <thead>
+              <tr>
+                {% for column in preview.columns %}
+                <th>{{ column }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in preview.rows %}
+              <tr>
+                {% for column in preview.columns %}
+                <td>{{ row[column] }}</td>
+                {% endfor %}
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="muted small">No rows found.</p>
+        {% endif %} {% if preview.table_name == "Your Fees" %}
+        <h4>Unpaid Fees</h4>
+        {% if unpaid_fee_summary and
+        unpaid_fee_summary.number_of_unpaid_fees|int > 0 %}
+        <div class="table-wrap">
+          <table class="preview-table">
+            <thead>
+              <tr>
+                <th>patron_id</th>
+                <th>first_name</th>
+                <th>last_name</th>
+                <th>email</th>
+                <th>number_of_unpaid_fees</th>
+                <th>total_unpaid_fees</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{{ unpaid_fee_summary.patron_id }}</td>
+                <td>{{ unpaid_fee_summary.first_name }}</td>
+                <td>{{ unpaid_fee_summary.last_name }}</td>
+                <td>{{ unpaid_fee_summary.email }}</td>
+                <td>{{ unpaid_fee_summary.number_of_unpaid_fees }}</td>
+                <td>
+                  ${{ "%.2f"|format(unpaid_fee_summary.total_unpaid_fees) }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="muted small">No unpaid fees found.</p>
+        {% endif %} {% endif %} {% if preview.table_name == "Your Reservations"
+        %}
+        <h4>Upcoming Reservations</h4>
+        {% if upcoming_reservations %}
+        <div class="table-wrap">
+          <table class="preview-table">
+            <thead>
+              <tr>
+                <th>reservation_id</th>
+                <th>patron_id</th>
+                <th>room_no</th>
+                <th>reservation_date</th>
+                <th>start_time</th>
+                <th>end_time</th>
+                <th>reservation_type</th>
+                <th>reservation_status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for reservation in upcoming_reservations %}
+              <tr>
+                <td>{{ reservation.reservation_id }}</td>
+                <td>{{ reservation.patron_id }}</td>
+                <td>{{ reservation.room_no }}</td>
+                <td>{{ reservation.reservation_date }}</td>
+                <td>{{ reservation.start_time }}</td>
+                <td>{{ reservation.end_time }}</td>
+                <td>{{ reservation.reservation_type }}</td>
+                <td>{{ reservation.reservation_status }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="muted small">No upcoming reservations found.</p>
+        {% endif %} {% endif %}
+      </div>
+      {% endfor %} {% endif %} {% if role in ['patron', 'staff'] %}
+      <div id="AllMaterialsTable" style="display: none">
+        <h3 class="table-title">All Library Materials</h3>
+
+        <table class="preview-table">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Title</th>
+              <th>Genre</th>
+              <th>Availability</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in materials %}
+            <tr>
+              <td>{{ m.material_type }}</td>
+              <td>{{ m.title }}</td>
+              <td>{{ m.genre }}</td>
+              <td>{{ m.availability }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %} {% if role == 'patron' %}
+      <div id="PatronCheckoutRequestsTable" style="display: none">
+        <h3 class="table-title">Your Checkout Requests</h3>
+
+        {% if patron_checkout_requests %}
+        <table class="preview-table">
+          <thead>
+            <tr>
+              <th>request_id</th>
+              <th>request_date</th>
+              <th>request_status</th>
+              <th>material_id</th>
+              <th>title</th>
+              <th>material_type</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for request in patron_checkout_requests %}
+            <tr>
+              <td>{{ request.request_id }}</td>
+              <td>{{ request.request_date }}</td>
+              <td>{{ request.request_status }}</td>
+              <td>{{ request.material_id }}</td>
+              <td>{{ request.title }}</td>
+              <td>{{ request.material_type }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p class="muted small">No checkout requests found.</p>
+        {% endif %}
+      </div>
+      {% endif %} {% if role == 'staff' %}
+      <div id="AllCheckoutsTable" style="display: none">
+        <h3 class="table-title">All Checkouts</h3>
+
+        {% if all_checkouts %}
+        <table class="preview-table">
+          <thead>
+            <tr>
+              <th>patron_id</th>
+              <th>material_id</th>
+              <th>checkout_date</th>
+              <th>due_date</th>
+              <th>return_date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for checkout in all_checkouts %}
+            <tr>
+              <td>{{ checkout.patron_id }}</td>
+              <td>{{ checkout.material_id }}</td>
+              <td>{{ checkout.checkout_date }}</td>
+              <td>{{ checkout.due_date }}</td>
+              <td>{{ checkout.return_date or "" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p class="muted small">No checkouts found.</p>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <div id="checkedOutCountSection" style="display: none">
+        <h3 class="table-title">Checked Out Materials</h3>
+        <p><strong>Total:</strong> {{ checked_out_count }}</p>
+      </div>
+
+      <form method="post" action="{{ url_for('logout') }}">
+        <button class="secondary top-gap" type="submit">Log Out</button>
+      </form>
+    </main>
+  </body>
+</html>
